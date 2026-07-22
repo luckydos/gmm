@@ -1,14 +1,34 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>LCK</title>
-	<style>
-		body { font-family: sans-serif; padding: 20px; }
-	</style>
+  <meta charset="UTF-8">
+  <title>글로벌 마켓 모니터</title>
 </head>
 <body>
-	<div>LCK Index Page</div>
+  <h1>마켓 데이터</h1>
+  <div id="data-container">로딩 중...</div>
+
+  <script>
+    // 2단계에서 복사한 GAS 웹 앱 URL
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxltV_0G0SHQdpO1AuWSIj75GDRXqBwxYw7BRz8mbQ33AROZuQcs5ZYeW8Y-sYodl8Y6Q/exec";
+
+    async function loadData() {
+      try {
+        // GAS는 기본적으로 리다이렉트(302)를 수행하므로 fetch가 이를 자동으로 따라갑니다.
+        const response = await fetch(GAS_API_URL);
+        const data = await response.json();
+        
+        console.log("받아온 데이터:", data);
+        
+        // 화면에 데이터 표시
+        document.getElementById("data-container").innerText = JSON.stringify(data, null, 2);
+      } catch (error) {
+        console.error("데이터 로드 실패:", error);
+      }
+    }
+
+    // 페이지 로드 시 실행
+    loadData();
+  </script>
 </body>
 </html>
