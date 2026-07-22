@@ -2,33 +2,890 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>글로벌 마켓 모니터</title>
-</head>
-<body>
-  <h1>마켓 데이터</h1>
-  <div id="data-container">로딩 중...</div>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Market Monitor Dashboard</title>
+  
+  <!-- Font Awesome 6 (CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts (Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <script>
-    // 2단계에서 복사한 GAS 웹 앱 URL
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxltV_0G0SHQdpO1AuWSIj75GDRXqBwxYw7BRz8mbQ33AROZuQcs5ZYeW8Y-sYodl8Y6Q/exec";
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: #151c2c;
+      --card-border: #232d42;
+      --card-hover: #1b2438;
+      
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --accent-blue: #38bdf8;
+      --accent-purple: #a855f7;
+      
+      /* 상승 / 하강 / 보합 컬러 */
+      --stock-up: #ef4444;
+      --stock-up-bg: rgba(239, 68, 68, 0.12);
+      --stock-down: #3b82f6;
+      --stock-down-bg: rgba(59, 130, 246, 0.12);
+      --stock-flat: #64748b;
+      --stock-flat-bg: rgba(100, 116, 139, 0.12);
+    }
 
-    async function loadData() {
-      try {
-        // GAS는 기본적으로 리다이렉트(302)를 수행하므로 fetch가 이를 자동으로 따라갑니다.
-        const response = await fetch(GAS_API_URL);
-        const data = await response.json();
-        
-        console.log("받아온 데이터:", data);
-        
-        // 화면에 데이터 표시
-        document.getElementById("data-container").innerText = JSON.stringify(data, null, 2);
-      } catch (error) {
-        console.error("데이터 로드 실패:", error);
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+      overflow-x: hidden; /* 가로 스크롤 발생 방지 안전장치 */
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1280px;
+    }
+
+    /* ==========================================
+       Header Styles
+       ========================================== */
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: 8px;
+    }
+
+    .header-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .header-left i.fa-chart-line {
+      font-size: 1.3rem;
+      color: var(--accent-blue);
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    /* 시간 정보 박스 */
+    .time-info {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      padding: 6px 10px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .time-info i.fa-clock {
+      font-size: 0.78rem;
+      color: var(--accent-blue);
+    }
+
+    .delay-icon {
+      font-size: 0.72rem;
+      color: #f59e0b;
+      margin-left: 2px;
+    }
+
+    /* 새로고침 버튼 */
+    .refresh-btn {
+      background: var(--card-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--card-border);
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    .refresh-btn:hover {
+      background: var(--card-hover);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .refresh-btn i.spinning {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ==========================================
+       Custom Tooltip Styles (말풍선 수정본)
+       ========================================== */
+    .tooltip-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .tooltip-btn {
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding: 2px 4px;
+      transition: color 0.2s ease;
+    }
+
+    .tooltip-btn:hover {
+      color: var(--accent-blue);
+    }
+
+    .custom-tooltip {
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1e293b;
+      color: #f8fafc;
+      font-size: 0.75rem;
+      font-weight: 500;
+      line-height: 1.4;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      white-space: pre-line;
+      word-break: keep-all;
+      width: max-content;
+      max-width: 200px; /* 모바일 이탈 방지를 위해 최대 폭축소 */
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    /* 기본 중앙 말풍선 화살표 */
+    .custom-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px;
+      border-style: solid;
+      border-color: #1e293b transparent transparent transparent;
+    }
+
+    /* 호버 또는 활성화 시 표출 */
+    .tooltip-wrapper:hover .custom-tooltip,
+    .tooltip-wrapper.active .custom-tooltip,
+    .time-info.active .custom-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* [수정] 오른쪽 끝 요소 전용 툴팁 위치 (오른쪽 밖으로 안 나가게 붙임) */
+    .tooltip-wrapper.right-aligned .custom-tooltip,
+    .time-info .custom-tooltip {
+      left: auto;
+      right: 0;
+      transform: none;
+      max-width: 220px;
+    }
+
+    .tooltip-wrapper.right-aligned .custom-tooltip::after {
+      left: auto;
+      right: 16px;
+      transform: none;
+    }
+
+    /* 상단 시계박스 전용 화살표 */
+    .time-info .custom-tooltip {
+      top: 125%;
+      bottom: auto;
+    }
+
+    .time-info .custom-tooltip::after {
+      bottom: 100%;
+      top: auto;
+      right: 12px;
+      left: auto;
+      transform: none;
+      border-color: transparent transparent #1e293b transparent;
+    }
+
+    /* ==========================================
+       Dashboard Grid & Card Base Styles
+       ========================================== */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--card-border);
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-header i {
+      font-size: 1.1rem;
+      color: var(--accent-blue);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .item-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin: 0 -10px;
+      transition: background-color 0.2s ease;
+    }
+
+    .item-link:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .item-link:hover .external-icon {
+      opacity: 1;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .item-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .external-icon {
+      font-size: 0.72rem;
+      color: var(--accent-blue);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .item-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .item-right {
+      text-align: right;
+    }
+
+    .price {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: block;
+      letter-spacing: -0.01em;
+    }
+
+    .change-badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .bg-up { background-color: var(--stock-up-bg); color: var(--stock-up); }
+    .bg-down { background-color: var(--stock-down-bg); color: var(--stock-down); }
+    .bg-flat { background-color: var(--stock-flat-bg); color: var(--stock-flat); }
+
+    .loading-container {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      color: var(--text-secondary);
+      gap: 16px;
+    }
+
+    .loading-spinner {
+      font-size: 2.2rem;
+      color: var(--accent-blue);
+    }
+
+    /* ==========================================
+       Media Queries
+       ========================================== */
+    @media (min-width: 768px) {
+      header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-left {
+        width: auto;
+        justify-content: flex-start;
+        gap: 16px;
+      }
+
+      .header-left i.fa-chart-line {
+        font-size: 1.5rem;
+      }
+
+      h1 {
+        font-size: 1.35rem;
+      }
+
+      .header-right {
+        width: auto;
+      }
+
+      .refresh-btn {
+        width: auto;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    // 페이지 로드 시 실행
-    loadData();
+    @media (min-width: 1024px) {
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <div class="header-title-group">
+          <i class="fa-solid fa-chart-line"></i>
+          <h1>글로벌 마켓 모니터</h1>
+        </div>
+        <div id="timeBox" class="time-info" onclick="toggleTooltip(event, this)">
+          <i class="fa-regular fa-clock"></i>
+          <span id="updateTime">불러오는 중...</span>
+          <i class="fa-solid fa-circle-info delay-icon"></i>
+          <div class="custom-tooltip">야후 파이낸스 제공 정책상 지수/선물은 10~15분 지연 시세입니다.</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="refreshBtn" class="refresh-btn" onclick="loadData()">
+          <i id="refreshIcon" class="fa-solid fa-rotate-right"></i>
+          <span>새로고침</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="dashboard" class="grid">
+      <div class="loading-container">
+        <i class="fa-solid fa-circle-notch fa-spin loading-spinner"></i>
+        <p>실시간 시장 데이터를 불러오고 있습니다...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxltV_0G0SHQdpO1AuWSIj75GDRXqBwxYw7BRz8mbQ33AROZuQcs5ZYeW8Y-sYodl8Y6Q/exec";
+      
+      loadData();
+
+      // 바깥 영역 클릭 시 열려있는 말풍선 툴팁 닫기
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.tooltip-wrapper') && !e.target.closest('.time-info')) {
+          document.querySelectorAll('.tooltip-wrapper.active, .time-info.active').forEach(el => {
+            el.classList.remove('active');
+          });
+        }
+      });
+    };
+
+    function toggleTooltip(event, element) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const isActive = element.classList.contains('active');
+      
+      document.querySelectorAll('.tooltip-wrapper.active, .time-info.active').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      if (!isActive) {
+        element.classList.add('active');
+      }
+    }
+
+    function loadData() {
+      const refreshIcon = document.getElementById('refreshIcon');
+      refreshIcon.classList.add('spinning');
+
+      document.getElementById('dashboard').innerHTML = `
+        <div class="loading-container">
+          <i class="fa-solid fa-circle-notch fa-spin loading-spinner"></i>
+          <p>실시간 시장 데이터를 불러오고 있습니다...</p>
+        </div>`;
+
+      google.script.run
+        .withSuccessHandler(data => {
+          refreshIcon.classList.remove('spinning');
+          
+          if (data && data.timestamp) {
+            try {
+              const parts = data.timestamp.split(' ');
+              const dateParts = parts[0].split('-');
+              const timeParts = parts[1].split(':');
+              document.getElementById('updateTime').innerText = `${dateParts[1]}.${dateParts[2]} ${timeParts[0]}:${timeParts[1]} 기준`;
+            } catch(e) {
+              document.getElementById('updateTime').innerText = `${data.timestamp} 기준`;
+            }
+          }
+
+          renderDashboard(data);
+        })
+        .withFailureHandler(err => {
+          refreshIcon.classList.remove('spinning');
+          showError(err);
+        })
+        .getMarketData();
+    }
+
+    function showError(err) {
+      document.getElementById('dashboard').innerHTML = `
+        <div class="loading-container" style="color: var(--stock-up);">
+          <i class="fa-solid fa-triangle-exclamation loading-spinner"></i>
+          <p>데이터 수집 실패: ${err.message}</p>
+        </div>`;
+    }
+
+    function formatNumber(num, decimals = 2) {
+      if (num === null || num === undefined || isNaN(num)) return "0.00";
+      return num.toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function getChangeBadgeHtml(change) {
+      if (change === null || change === undefined) return "";
+      
+      let badgeClass = "bg-flat";
+      let iconClass = "fa-minus";
+      let prefix = "";
+
+      if (change > 0.005) {
+        badgeClass = "bg-up";
+        iconClass = "fa-caret-up";
+        prefix = "+";
+      } else if (change < -0.005) {
+        badgeClass = "bg-down";
+        iconClass = "fa-caret-down";
+      }
+
+      return `
+        <span class="change-badge ${badgeClass}">
+          <i class="fa-solid ${iconClass}"></i>
+          ${prefix}${change.toFixed(2)}%
+        </span>`;
+    }
+
+    function getVixBadgeHtml(vixPrice, vixChange) {
+      let color = "#10b981"; 
+      let label = "안정";
+      let icon = "fa-shield-halved";
+
+      if (vixPrice >= 30) {
+        color = "#ef4444"; 
+        label = "위험";
+        icon = "fa-triangle-exclamation";
+      } else if (vixPrice >= 20) {
+        color = "#f59e0b"; 
+        label = "경계";
+        icon = "fa-circle-exclamation";
+      }
+
+      return `
+        <div style="display:flex; align-items:center; justify-content:flex-end;">
+          <span class="change-badge" style="background:${color}20; color:${color}; border:1px solid ${color}40; font-weight:700;">
+            <i class="fa-solid ${icon}"></i> ${label}
+          </span>
+        </div>`;
+    }
+
+    function getSkewBadgeHtml(skewPrice, skewChange) {
+      let color = "#10b981"; 
+      let label = "정상";
+      let icon = "fa-shield-halved";
+
+      if (skewPrice >= 140) {
+        color = "#ef4444"; 
+        label = "위험";
+        icon = "fa-triangle-exclamation";
+      } else if (skewPrice >= 130) {
+        color = "#f59e0b"; 
+        label = "주의";
+        icon = "fa-circle-exclamation";
+      }
+
+      return `
+        <div style="display:flex; align-items:center; justify-content:flex-end;">
+          <span class="change-badge" style="background:${color}20; color:${color}; border:1px solid ${color}40; font-weight:700;">
+            <i class="fa-solid ${icon}"></i> ${label}
+          </span>
+        </div>`;
+    }
+
+    // [수정] right-aligned 클래스 추가로 화면 이탈 방지
+    function getMarketStatusBadgeHtml(fng, vix, skew) {
+      const fngVal = fng ? fng.price : 50;
+      const vixVal = vix ? vix.price : 0;
+      const skewVal = skew ? skew.price : 0;
+
+      let statusLabel = "장기투자 (평화)";
+      let color = "#10b981"; 
+      let icon = "fa-shield-halved";
+      let tooltip = "시장이 평화로우며 적립식 장기투자에 적합한 구간입니다.";
+
+      if (skewVal >= 135 && vixVal >= 18) {
+        statusLabel = "관망 (폭풍전야)";
+        color = "#ef4444"; 
+        icon = "fa-triangle-exclamation";
+        tooltip = "보호 옵션 비중이 높고 실제 변동성이 커지고 있습니다. 관망을 권장합니다.";
+      } else if (skewVal >= 135 && vixVal < 18) {
+        statusLabel = "위험 (현금확대)";
+        color = "#f97316"; 
+        icon = "fa-triangle-exclamation";
+        tooltip = "시장은 평화로워 보이나 기관의 하방 리스크 헤지(풋옵션)가 커진 상태입니다. 현금 비중 확대를 고려하세요.";
+      } else if (vixVal >= 30 || (fngVal <= 25 && vixVal >= 25)) {
+        statusLabel = "매수 기회 (공포)";
+        color = "#3b82f6"; 
+        icon = "fa-basket-shopping";
+        tooltip = "시장의 공포가 극에 달해 저점 분할 매수에 유리한 구간입니다.";
+      } else if (fngVal >= 75) {
+        statusLabel = "탐욕 (과열경계)";
+        color = "#f59e0b"; 
+        icon = "fa-fire";
+        tooltip = "시장 심리가 극도로 열발해 있어 추격 매수에 주의가 필요합니다.";
+      }
+
+      return `
+        <div class="tooltip-wrapper right-aligned" onclick="toggleTooltip(event, this)">
+          <span class="change-badge" style="background:${color}20; color:${color}; border:1px solid ${color}40; font-weight:700; cursor:pointer; font-size:0.75rem;">
+            <i class="fa-solid ${icon}"></i> ${statusLabel}
+          </span>
+          <div class="custom-tooltip">${tooltip}</div>
+        </div>`;
+    }
+
+    // [수정] right-aligned 클래스 추가로 화면 이탈 방지
+    function getBondStatusBadgeHtml(us02yt, tnx) {
+      const y2 = us02yt ? us02yt.price : 0;
+      const y10 = tnx ? tnx.price : 0;
+
+      let statusLabel = "채권 보유 (중립)";
+      let color = "#38bdf8"; 
+      let icon = "fa-scale-balanced";
+      let tooltip = "국채 금리가 안정적인 범위 내에 있습니다.";
+
+      if (y2 > 0 && y10 > 0 && y2 > y10) {
+        statusLabel = "금리역전 (경기경계)";
+        color = "#a855f7"; 
+        icon = "fa-arrow-trend-down";
+        tooltip = "2년물 금리가 10년물보다 높은 장단기 금리 역전 상태입니다. 경기 침체 리스크에 유의하세요.";
+      } else if (y10 >= 4.2) {
+        statusLabel = "채권 매수 (고금리)";
+        color = "#10b981"; 
+        icon = "fa-cart-shopping";
+        tooltip = "국채 금리가 높은 수준입니다. 높은 이자 수익 및 향후 금리 하락 시 채권 가격 상승(차익)을 노리기 좋습니다.";
+      } else if (y10 > 0 && y10 <= 3.5) {
+        statusLabel = "채권 매도 (차익실현)";
+        color = "#ef4444"; 
+        icon = "fa-money-bill-transfer";
+        tooltip = "국채 금리가 낮아 채권 가격이 비싼 구간입니다. 이익 실현 또는 관망을 고려하세요.";
+      } else if (tnx && tnx.change >= 2.0) {
+        statusLabel = "채권 관망 (금리상승)";
+        color = "#f59e0b"; 
+        icon = "fa-hand";
+        tooltip = "금리가 상승 중입니다. 채권 가격이 추가 하락할 수 있으므로 분할 접근이 필요합니다.";
+      }
+
+      return `
+        <div class="tooltip-wrapper right-aligned" onclick="toggleTooltip(event, this)">
+          <span class="change-badge" style="background:${color}20; color:${color}; border:1px solid ${color}40; font-weight:700; cursor:pointer; font-size:0.75rem;">
+            <i class="fa-solid ${icon}"></i> ${statusLabel}
+          </span>
+          <div class="custom-tooltip">${tooltip}</div>
+        </div>`;
+    }
+
+    function renderDashboard(data) {
+      let fngText = "Neutral", fngIcon = "fa-face-meh", fngColor = "#eab308";
+      if (data.fng.price <= 24) { fngIcon = "fa-face-flushed"; fngText = "Extreme Fear"; fngColor = "#ef4444"; }
+      else if (data.fng.price <= 44) { fngIcon = "fa-face-frown"; fngText = "Fear"; fngColor = "#f97316"; }
+      else if (data.fng.price <= 55) { fngIcon = "fa-face-meh"; fngText = "Neutral"; fngColor = "#eab308"; }
+      else if (data.fng.price <= 74) { fngIcon = "fa-face-smile"; fngText = "Greed"; fngColor = "#84cc16"; }
+      else { fngIcon = "fa-rocket"; fngText = "Extreme Greed"; fngColor = "#10b981"; }
+
+      const overallStatusBadge = getMarketStatusBadgeHtml(data.fng, data.vix, data.skew);
+      const bondStatusBadge = getBondStatusBadgeHtml(data.us02yt, data.tnx);
+
+      const sections = [
+        {
+          title: "시장 심리 & 변동성",
+          icon: "fa-heart-pulse",
+          headerExtra: overallStatusBadge,
+          items: [
+            {
+              name: "Fear & Greed",
+              sub: "CNN 공포탐욕 지수",
+              price: `${data.fng.price}`,
+              changeHtml: `<span class="change-badge" style="background:${fngColor}20; color:${fngColor}; border:1px solid ${fngColor}40; font-weight:700;"><i class="fa-regular ${fngIcon}"></i> ${fngText}</span>`,
+              icon: `fa-regular ${fngIcon}`,
+              url: data.fng.url,
+              tooltip: "CNN 투자자 심리 지수 (0~100)\n• 0~24: 극심한 공포\n• 25~44: 공포\n• 45~55: 중립\n• 56~74: 탐욕\n• 75~100: 극심한 탐욕"
+            },
+            {
+              name: "VIX 변동성",
+              sub: "CBOE 변동성 지수",
+              price: formatNumber(data.vix.price),
+              changeHtml: getVixBadgeHtml(data.vix.price, data.vix.change),
+              icon: "fa-solid fa-bolt",
+              url: data.vix.url,
+              tooltip: "시장 변동성 지수 (S&P500 옵션 기반)\n• 20 미만: 안정\n• 20~30: 경계\n• 30 이상: 위험"
+            },
+            {
+              name: "SKEW 지수",
+              sub: "블랙스완 위험 지수",
+              price: formatNumber(data.skew.price),
+              changeHtml: getSkewBadgeHtml(data.skew.price, data.skew.change),
+              icon: "fa-solid fa-fish-fins",
+              url: data.skew.url,
+              tooltip: "블랙스완(폭락) 위험 지수\n• 120 미만: 정상\n• 120~135: 주의\n• 135 이상: 위험"
+            }
+          ]
+        },
+        {
+          title: "미국 대표 지수",
+          icon: "fa-chart-column",
+          headerExtra: "",
+          items: [
+            { name: "S&P 500", sub: "^GSPC", price: formatNumber(data.spx.price), changeHtml: getChangeBadgeHtml(data.spx.change), icon: "fa-solid fa-flag-usa", url: data.spx.url },
+            { name: "NASDAQ", sub: "^IXIC", price: formatNumber(data.ixic.price), changeHtml: getChangeBadgeHtml(data.ixic.change), icon: "fa-solid fa-microchip", url: data.ixic.url },
+            { name: "필라델피아 반도체", sub: "^SOX", price: formatNumber(data.sox.price), changeHtml: getChangeBadgeHtml(data.sox.change), icon: "fa-solid fa-memory", url: data.sox.url }
+          ]
+        },
+        {
+          title: "미국 3대 지수 선물",
+          icon: "fa-arrow-trend-up",
+          headerExtra: "",
+          items: [
+            { name: "S&P 500 선물", sub: "ES=F", price: formatNumber(data.es_f.price), changeHtml: getChangeBadgeHtml(data.es_f.change), icon: "fa-solid fa-chart-pie", url: data.es_f.url },
+            { name: "나스닥 100 선물", sub: "NQ=F", price: formatNumber(data.nq_f.price), changeHtml: getChangeBadgeHtml(data.nq_f.change), icon: "fa-solid fa-laptop-code", url: data.nq_f.url },
+            { name: "다우존스 선물", sub: "YM=F", price: formatNumber(data.ym_f.price), changeHtml: getChangeBadgeHtml(data.ym_f.change), icon: "fa-solid fa-building", url: data.ym_f.url }
+          ]
+        },
+        {
+          title: "주요 글로벌 환율",
+          icon: "fa-coins",
+          headerExtra: "",
+          items: [
+            { name: "달러 / 원", sub: "USD/KRW", price: `${formatNumber(data.usdkrw.price)} 원`, changeHtml: getChangeBadgeHtml(data.usdkrw.change), icon: "fa-solid fa-dollar-sign", url: data.usdkrw.url },
+            { name: "엔 / 원", sub: "JPY/KRW (100엔)", price: `${formatNumber(data.jpykrw.price)} 원`, changeHtml: getChangeBadgeHtml(data.jpykrw.change), icon: "fa-solid fa-yen-sign", url: data.jpykrw.url },
+            { name: "달러 / 엔", sub: "USD/JPY", price: `${formatNumber(data.usdjpy.price)} 엔`, changeHtml: getChangeBadgeHtml(data.usdjpy.change), icon: "fa-solid fa-arrow-right-arrow-left", url: data.usdjpy.url }
+          ]
+        },
+        {
+          title: "원자재 & 암호화폐",
+          icon: "fa-gem",
+          headerExtra: "",
+          items: [
+            { name: "WTI 원유 선물", sub: "CL=F", price: `$${formatNumber(data.oil.price)}`, changeHtml: getChangeBadgeHtml(data.oil.change), icon: "fa-solid fa-oil-well", url: data.oil.url },
+            { name: "비트코인", sub: "BTC/USD", price: `$${formatNumber(data.btc.price, 0)}`, changeHtml: getChangeBadgeHtml(data.btc.change), icon: "fa-brands fa-btc", url: data.btc.url },
+            { name: "이더리움", sub: "ETH/USD", price: `$${formatNumber(data.eth.price, 0)}`, changeHtml: getChangeBadgeHtml(data.eth.change), icon: "fa-brands fa-ethereum", url: data.eth.url }
+          ]
+        },
+        {
+          title: "미국 국채 금리",
+          icon: "fa-building-columns",
+          headerExtra: bondStatusBadge,
+          items: [
+            { name: "2년물 국채", sub: "2YY=F (단기)", price: `${data.us02yt.price.toFixed(3)}%`, changeHtml: getChangeBadgeHtml(data.us02yt.change), icon: "fa-solid fa-clock-rotate-left", url: data.us02yt.url },
+            { name: "10년물 국채", sub: "^TNX (중장기)", price: `${data.tnx.price.toFixed(3)}%`, changeHtml: getChangeBadgeHtml(data.tnx.change), icon: "fa-solid fa-landmark", url: data.tnx.url },
+            { name: "30년물 국채", sub: "^TYX (초장기)", price: `${data.tyx.price.toFixed(3)}%`, changeHtml: getChangeBadgeHtml(data.tyx.change), icon: "fa-solid fa-vault", url: data.tyx.url }
+          ]
+        }
+      ];
+
+      let html = "";
+      sections.forEach(sec => {
+        html += `
+          <div class="card">
+            <div class="card-header">
+              <div class="card-header-left">
+                <i class="fa-solid ${sec.icon}"></i>
+                <span class="card-title">${sec.title}</span>
+              </div>
+              ${sec.headerExtra || ''}
+            </div>
+            <div class="item-list">`;
+            
+        sec.items.forEach(item => {
+          const tooltipHtml = item.tooltip 
+            ? `<div class="tooltip-wrapper" onclick="toggleTooltip(event, this)">
+                 <i class="fa-regular fa-circle-question tooltip-btn"></i>
+                 <div class="custom-tooltip">${item.tooltip}</div>
+               </div>` 
+            : '';
+
+          html += `
+            <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="item-link" title="${item.name} 상세 차트 열기">
+              <div class="item">
+                <div class="item-left">
+                  <div class="icon-badge">
+                    <i class="${item.icon}"></i>
+                  </div>
+                  <div>
+                    <span class="item-name">
+                      ${item.name} ${tooltipHtml}
+                      <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
+                    </span>
+                    <span class="item-sub">${item.sub}</span>
+                  </div>
+                </div>
+                <div class="item-right">
+                  <span class="price">${item.price}</span>
+                  ${item.changeHtml}
+                </div>
+              </div>
+            </a>`;
+        });
+
+        html += `</div></div>`;
+      });
+
+      document.getElementById('dashboard').innerHTML = html;
+    }
   </script>
 </body>
 </html>
