@@ -88,9 +88,19 @@
 		async function loadData() {
 			const refreshIcon = document.getElementById('refreshIcon');
 			const updateTimeEl = document.getElementById('updateTime');
+			const dashboardEl = document.getElementById('dashboard');
 
 			if (refreshIcon) refreshIcon.classList.add('spinning');
 			if (updateTimeEl) updateTimeEl.innerText = "불러오는 중...";
+
+			// 새로고침 실행 시 대시보드 영역을 즉시 로딩 상태로 변경
+			if (dashboardEl) {
+				dashboardEl.innerHTML = `
+					<div class="loading-container">
+						<i class="fa-solid fa-circle-notch fa-spin loading-spinner"></i>
+						<p>실시간 시장 데이터를 불러오고 있습니다...</p>
+					</div>`;
+			}
 
 			// 타임아웃 제어를 위한 AbortController
 			const controller = new AbortController();

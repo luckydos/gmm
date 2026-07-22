@@ -209,6 +209,7 @@ h1 {
 
 .tooltip-wrapper:hover .custom-tooltip,
 .tooltip-wrapper.active .custom-tooltip,
+.time-info:hover .custom-tooltip,
 .time-info.active .custom-tooltip {
 	opacity: 1;
 	visibility: visible;
