@@ -512,6 +512,18 @@
       
       loadData();
 
+async function loadData() {
+  try {
+    const response = await fetch(GAS_API_URL);
+    const data = await response.json();
+    
+    // 받아온 데이터를 기존 렌더링 함수에 그대로 넘겨줌!
+    renderDashboard(data); 
+  } catch (error) {
+    console.error("데이터 로딩 실패:", error);
+  }
+}
+
       // 바깥 영역 클릭 시 열려있는 말풍선 툴팁 닫기
       document.addEventListener('click', function(e) {
         if (!e.target.closest('.tooltip-wrapper') && !e.target.closest('.time-info')) {
@@ -535,40 +547,6 @@
       if (!isActive) {
         element.classList.add('active');
       }
-    }
-
-    function loadData() {
-      const refreshIcon = document.getElementById('refreshIcon');
-      refreshIcon.classList.add('spinning');
-
-      document.getElementById('dashboard').innerHTML = `
-        <div class="loading-container">
-          <i class="fa-solid fa-circle-notch fa-spin loading-spinner"></i>
-          <p>실시간 시장 데이터를 불러오고 있습니다...</p>
-        </div>`;
-
-      google.script.run
-        .withSuccessHandler(data => {
-          refreshIcon.classList.remove('spinning');
-          
-          if (data && data.timestamp) {
-            try {
-              const parts = data.timestamp.split(' ');
-              const dateParts = parts[0].split('-');
-              const timeParts = parts[1].split(':');
-              document.getElementById('updateTime').innerText = `${dateParts[1]}.${dateParts[2]} ${timeParts[0]}:${timeParts[1]} 기준`;
-            } catch(e) {
-              document.getElementById('updateTime').innerText = `${data.timestamp} 기준`;
-            }
-          }
-
-          renderDashboard(data);
-        })
-        .withFailureHandler(err => {
-          refreshIcon.classList.remove('spinning');
-          showError(err);
-        })
-        .getMarketData();
     }
 
     function showError(err) {
