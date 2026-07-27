@@ -105,8 +105,13 @@
 						const parts = data.timestamp.split(' ');
 						const dateParts = parts[0].split('-');
 						const timeParts = parts[1].split(':');
-						updateTimeEl.innerText = `${dateParts[1]}.${dateParts[2]} ${timeParts[0]}:${timeParts[1]} 기준`;
-					} catch (e) { updateTimeEl.innerText = `${data.timestamp} 기준`; }
+						const formattedTime = `${dateParts[1]}.${dateParts[2]} ${timeParts[0]}:${timeParts[1]}`;
+
+						// isError 상태에 따라 (수집 오류) 문구 출력
+						updateTimeEl.innerText = data.isError ? `${formattedTime} (수집 오류)` : `${formattedTime} 기준`;
+					} catch (e) {
+						updateTimeEl.innerText = `${data.timestamp}`;
+					}
 				}
 
 				renderDashboard(data);
