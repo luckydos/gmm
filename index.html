@@ -105,13 +105,8 @@
 						const parts = data.timestamp.split(' ');
 						const dateParts = parts[0].split('-');
 						const timeParts = parts[1].split(':');
-						const formattedTime = `${dateParts[1]}.${dateParts[2]} ${timeParts[0]}:${timeParts[1]}`;
-
-						// isError 상태에 따라 (수집 오류) 문구 출력
-						updateTimeEl.innerText = data.isError ? `${formattedTime} (수집 오류)` : `${formattedTime} 기준`;
-					} catch (e) {
-						updateTimeEl.innerText = `${data.timestamp}`;
-					}
+						updateTimeEl.innerText = `${dateParts[1]}.${dateParts[2]} ${timeParts[0]}:${timeParts[1]} 기준`;
+					} catch (e) { updateTimeEl.innerText = `${data.timestamp} 기준`; }
 				}
 
 				renderDashboard(data);
@@ -216,25 +211,25 @@
 				{
 					title: "시장 심리 & 변동성", icon: "fa-heart-pulse", headerExtra: overallStatusBadge,
 					items: [
-						{ name: "Fear & Greed", sub: "CNN 공포탐욕 지수", price: data.fng.error ? "-" : `${data.fng.price}`, changeHtml: fngBadgeHtml, icon: `fa-regular ${fngIcon}`, url: data.fng.url, tooltip: "CNN 투자자 심리 지수 (0~100)\n• 0~24: 극심한 공포\n• 25~44: 공포\n• 45~55: 중립\n• 56~74: 탐욕\n• 75~100: 극심한 탐욕" },
-						{ name: "VIX 변동성", sub: "CBOE 변동성 지수", price: data.vix.error ? "-" : formatNumber(data.vix.price), changeHtml: getVixBadgeHtml(data.vix.price, data.vix.error), icon: "fa-solid fa-bolt", url: data.vix.url, tooltip: "시장 변동성 지수\n• 20 미만: 안정\n• 20~30: 경계\n• 30 이상: 위험" },
-						{ name: "SKEW 지수", sub: "블랙스완 위험 지수", price: data.skew.error ? "-" : formatNumber(data.skew.price), changeHtml: getSkewBadgeHtml(data.skew.price, data.skew.error), icon: "fa-solid fa-fish-fins", url: data.skew.url, tooltip: "블랙스완(폭락) 위험 지수\n• 120 미만: 정상\n• 120~135: 주의\n• 135 이상: 위험" }
+						{ name: "Fear & Greed", sub: "CNN 공포탐욕 지수", price: data.fng.error ? "-" : `${data.fng.price}`, changeHtml: fngBadgeHtml, icon: "fa-solid fa-gauge-high", url: data.fng.url, tooltip: "CNN 투자자 심리 지수 (0~100)\n• 0~24: 극심한 공포\n• 25~44: 공포\n• 45~55: 중립\n• 56~74: 탐욕\n• 75~100: 극심한 탐욕" },
+						{ name: "VIX 변동성", sub: "CBOE 변동성 지수", price: data.vix.error ? "-" : formatNumber(data.vix.price), changeHtml: getVixBadgeHtml(data.vix.price, data.vix.error), icon: "fa-solid fa-fire", url: data.vix.url, tooltip: "시장 변동성 지수\n• 20 미만: 안정\n• 20~30: 경계\n• 30 이상: 위험" },
+						{ name: "SKEW 지수", sub: "블랙스완 위험 지수", price: data.skew.error ? "-" : formatNumber(data.skew.price), changeHtml: getSkewBadgeHtml(data.skew.price, data.skew.error), icon: "fa-solid fa-umbrella", url: data.skew.url, tooltip: "블랙스완(폭락) 위험 지수\n• 120 미만: 정상\n• 120~135: 주의\n• 135 이상: 위험" }
 					]
 				},
 				{
 					title: "미국 대표 지수", icon: "fa-chart-column", headerExtra: "",
 					items: [
-						{ name: "S&P 500", sub: "^GSPC", price: data.spx.error ? "-" : formatNumber(data.spx.price), changeHtml: getChangeBadgeHtml(data.spx.change, data.spx.error), icon: "fa-solid fa-flag-usa", url: data.spx.url },
-						{ name: "NASDAQ", sub: "^IXIC", price: data.ixic.error ? "-" : formatNumber(data.ixic.price), changeHtml: getChangeBadgeHtml(data.ixic.change, data.ixic.error), icon: "fa-solid fa-microchip", url: data.ixic.url },
-						{ name: "필라델피아 반도체", sub: "^SOX", price: data.sox.error ? "-" : formatNumber(data.sox.price), changeHtml: getChangeBadgeHtml(data.sox.change, data.sox.error), icon: "fa-solid fa-memory", url: data.sox.url }
+						{ name: "S&P 500", sub: "^GSPC", price: data.spx.error ? "-" : formatNumber(data.spx.price), changeHtml: getChangeBadgeHtml(data.spx.change, data.spx.error), icon: "fa-solid fa-globe", url: data.spx.url },
+						{ name: "NASDAQ", sub: "^IXIC", price: data.ixic.error ? "-" : formatNumber(data.ixic.price), changeHtml: getChangeBadgeHtml(data.ixic.change, data.ixic.error), icon: "fa-solid fa-laptop-code", url: data.ixic.url },
+						{ name: "필라델피아 반도체", sub: "^SOX", price: data.sox.error ? "-" : formatNumber(data.sox.price), changeHtml: getChangeBadgeHtml(data.sox.change, data.sox.error), icon: "fa-solid fa-microchip", url: data.sox.url }
 					]
 				},
 				{
-					title: "미국 3대 지수 선물", icon: "fa-arrow-trend-up", headerExtra: "",
+					title: "미국 3대 지수 선물", icon: "fa-clock-rotate-left", headerExtra: "",
 					items: [
-						{ name: "S&P 500 선물", sub: "ES=F", price: data.es_f.error ? "-" : formatNumber(data.es_f.price), changeHtml: getChangeBadgeHtml(data.es_f.change, data.es_f.error), icon: "fa-solid fa-chart-pie", url: data.es_f.url },
-						{ name: "나스닥 100 선물", sub: "NQ=F", price: data.nq_f.error ? "-" : formatNumber(data.nq_f.price), changeHtml: getChangeBadgeHtml(data.nq_f.change, data.nq_f.error), icon: "fa-solid fa-laptop-code", url: data.nq_f.url },
-						{ name: "다우존스 선물", sub: "YM=F", price: data.ym_f.error ? "-" : formatNumber(data.ym_f.price), changeHtml: getChangeBadgeHtml(data.ym_f.change, data.ym_f.error), icon: "fa-solid fa-building", url: data.ym_f.url }
+						{ name: "S&P 500 선물", sub: "ES=F", price: data.es_f.error ? "-" : formatNumber(data.es_f.price), changeHtml: getChangeBadgeHtml(data.es_f.change, data.es_f.error), icon: "fa-solid fa-chart-line", url: data.es_f.url },
+						{ name: "나스닥 100 선물", sub: "NQ=F", price: data.nq_f.error ? "-" : formatNumber(data.nq_f.price), changeHtml: getChangeBadgeHtml(data.nq_f.change, data.nq_f.error), icon: "fa-solid fa-terminal", url: data.nq_f.url },
+						{ name: "다우존스 선물", sub: "YM=F", price: data.ym_f.error ? "-" : formatNumber(data.ym_f.price), changeHtml: getChangeBadgeHtml(data.ym_f.change, data.ym_f.error), icon: "fa-solid fa-city", url: data.ym_f.url }
 					]
 				},
 				{
@@ -242,23 +237,23 @@
 					items: [
 						{ name: "달러 / 원", sub: "USD/KRW", price: data.usdkrw.error ? "-" : `${formatNumber(data.usdkrw.price)} 원`, changeHtml: getChangeBadgeHtml(data.usdkrw.change, data.usdkrw.error), icon: "fa-solid fa-dollar-sign", url: data.usdkrw.url },
 						{ name: "엔 / 원", sub: "JPY/KRW (100엔)", price: data.jpykrw.error ? "-" : `${formatNumber(data.jpykrw.price)} 원`, changeHtml: getChangeBadgeHtml(data.jpykrw.change, data.jpykrw.error), icon: "fa-solid fa-yen-sign", url: data.jpykrw.url },
-						{ name: "달러 / 엔", sub: "USD/JPY", price: data.usdjpy.error ? "-" : `${formatNumber(data.usdjpy.price)} 엔`, changeHtml: getChangeBadgeHtml(data.usdjpy.change, data.usdjpy.error), icon: "fa-solid fa-arrow-right-arrow-left", url: data.usdjpy.url }
+						{ name: "달러 / 엔", sub: "USD/JPY", price: data.usdjpy.error ? "-" : `${formatNumber(data.usdjpy.price)} 엔`, changeHtml: getChangeBadgeHtml(data.usdjpy.change, data.usdjpy.error), icon: "fa-solid fa-right-left", url: data.usdjpy.url }
 					]
 				},
 				{
-					title: "원자재 & 암호화폐", icon: "fa-gem", headerExtra: "",
+					title: "원자재 & 암호화폐", icon: "fa-cubes", headerExtra: "",
 					items: [
 						{ name: "WTI 원유 선물", sub: "CL=F", price: data.oil.error ? "-" : `$${formatNumber(data.oil.price)}`, changeHtml: getChangeBadgeHtml(data.oil.change, data.oil.error), icon: "fa-solid fa-oil-well", url: data.oil.url },
-						{ name: "비트코인", sub: "BTC/USD", price: data.btc.error ? "-" : `$${formatNumber(data.btc.price, 0)}`, changeHtml: getChangeBadgeHtml(data.btc.change, data.btc.error), icon: "fa-brands fa-btc", url: data.btc.url },
+						{ name: "비트코인", sub: "BTC/USD", price: data.btc.error ? "-" : `$${formatNumber(data.btc.price, 0)}`, changeHtml: getChangeBadgeHtml(data.btc.change, data.btc.error), icon: "fa-brands fa-bitcoin", url: data.btc.url },
 						{ name: "이더리움", sub: "ETH/USD", price: data.eth.error ? "-" : `$${formatNumber(data.eth.price, 0)}`, changeHtml: getChangeBadgeHtml(data.eth.change, data.eth.error), icon: "fa-brands fa-ethereum", url: data.eth.url }
 					]
 				},
 				{
-					title: "미국 국채 금리", icon: "fa-building-columns", headerExtra: bondStatusBadge,
+					title: "미국 국채 금리", icon: "fa-vault", headerExtra: bondStatusBadge,
 					items: [
-						{ name: "2년물 국채", sub: "2YY=F (단기)", price: data.us02yt.error ? "-" : `${Number(data.us02yt.price).toFixed(3)}%`, changeHtml: getChangeBadgeHtml(data.us02yt.change, data.us02yt.error), icon: "fa-solid fa-clock-rotate-left", url: data.us02yt.url },
+						{ name: "2년물 국채", sub: "2YY=F (단기)", price: data.us02yt.error ? "-" : `${Number(data.us02yt.price).toFixed(3)}%`, changeHtml: getChangeBadgeHtml(data.us02yt.change, data.us02yt.error), icon: "fa-solid fa-stopwatch", url: data.us02yt.url },
 						{ name: "10년물 국채", sub: "^TNX (중장기)", price: data.tnx.error ? "-" : `${Number(data.tnx.price).toFixed(3)}%`, changeHtml: getChangeBadgeHtml(data.tnx.change, data.tnx.error), icon: "fa-solid fa-landmark", url: data.tnx.url },
-						{ name: "30년물 국채", sub: "^TYX (초장기)", price: data.tyx.error ? "-" : `${Number(data.tyx.price).toFixed(3)}%`, changeHtml: getChangeBadgeHtml(data.tyx.change, data.tyx.error), icon: "fa-solid fa-vault", url: data.tyx.url }
+						{ name: "30년물 국채", sub: "^TYX (초장기)", price: data.tyx.error ? "-" : `${Number(data.tyx.price).toFixed(3)}%`, changeHtml: getChangeBadgeHtml(data.tyx.change, data.tyx.error), icon: "fa-solid fa-hourglass-end", url: data.tyx.url }
 					]
 				}
 			];
