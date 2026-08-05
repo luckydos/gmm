@@ -82,10 +82,10 @@
 			if (updateTimeEl) updateTimeEl.innerText = "불러오는 중...";
 			if (dashboardEl) {
 				dashboardEl.innerHTML = `
-					<div class="loading-container">
-						<i class="fa-solid fa-circle-notch fa-spin loading-spinner"></i>
-						<p>실시간 시장 데이터를 불러오고 있습니다...</p>
-					</div>`;
+                    <div class="loading-container">
+                        <i class="fa-solid fa-circle-notch fa-spin loading-spinner"></i>
+                        <p>실시간 시장 데이터를 불러오고 있습니다...</p>
+                    </div>`;
 			}
 
 			const controller = new AbortController();
@@ -131,11 +131,11 @@
 
 		function showError(message) {
 			document.getElementById('dashboard').innerHTML = `
-				<div class="loading-container" style="color: #ef4444;">
-					<i class="fa-solid fa-triangle-exclamation loading-spinner"></i>
-					<p>데이터 수집 실패: ${message}</p>
-					<button class="retry-btn" onclick="loadData()"><i class="fa-solid fa-rotate-right"></i> 다시 시도</button>
-				</div>`;
+                <div class="loading-container" style="color: #ef4444;">
+                    <i class="fa-solid fa-triangle-exclamation loading-spinner"></i>
+                    <p>데이터 수집 실패: ${message}</p>
+                    <button class="retry-btn" onclick="loadData()"><i class="fa-solid fa-rotate-right"></i> 다시 시도</button>
+                </div>`;
 		}
 
 		function formatNumber(num, decimals = 2) {
@@ -192,6 +192,54 @@
 			return `<div class="tooltip-wrapper right-aligned" onclick="toggleTooltip(event, this)"><span class="change-badge" style="background:${color}20; color:${color}; border:1px solid ${color}40; font-weight:700; cursor:pointer; font-size:0.75rem;"><i class="fa-solid ${icon}"></i> ${statusLabel}</span><div class="custom-tooltip">${tooltip}</div></div>`;
 		}
 
+		/* ★ [추가] Sector Summary Bar 헬퍼 함수들 */
+		function getIndicesStatusBadgeHtml(spx, ixic, sox) {
+			if (spx?.error || ixic?.error || sox?.error) return "";
+			const changes = [spx?.change || 0, ixic?.change || 0, sox?.change || 0];
+			const upCount = changes.filter(c => c > 0.05).length;
+			const downCount = changes.filter(c => c < -0.05).length;
+
+			let label = "혼조세", color = "#eab308", icon = "fa-scale-balanced", tooltip = "주요 지수가 방향성을 달리하고 있습니다.";
+			if (upCount === 3) { label = "강한 상승", color = "#10b981", icon = "fa-arrow-trend-up", tooltip = "미국 3대 핵심 지수가 일제히 상승 중입니다."; }
+			else if (downCount === 3) { label = "강한 하락", color = "#ef4444", icon = "fa-arrow-trend-down", tooltip = "미국 3대 핵심 지수가 일제히 하락 중입니다."; }
+			else if (upCount > downCount) { label = "우상향", color = "#84cc16", icon = "fa-angle-up", tooltip = "대다수 주요 지수가 상승 흐름을 보입니다."; }
+			else if (downCount > upCount) { label = "우하향", color = "#f97316", icon = "fa-angle-down", tooltip = "대다수 주요 지수가 하락 흐름을 보입니다."; }
+			return `<div class="tooltip-wrapper right-aligned" onclick="toggleTooltip(event, this)"><span class="change-badge" style="background:${color}20; color:${color}; border:1px solid ${color}40; font-weight:700; cursor:pointer; font-size:0.75rem;"><i class="fa-solid ${icon}"></i> ${label}</span><div class="custom-tooltip">${tooltip}</div></div>`;
+		}
+
+		function getFuturesStatusBadgeHtml(es, nq, ym) {
+			if (es?.error || nq?.error || ym?.error) return "";
+			const changes = [es?.change || 0, nq?.change || 0, ym?.change || 0];
+			const avgChange = changes.reduce((a, b) => a + b, 0) / 3;
+
+			let label = "보합권", color = "#eab308", icon = "fa-minus", tooltip = "지수 선물 장외 거래가 정체 상태입니다.";
+			if (avgChange >= 0.5) { label = "선물 급등", color = "#10b981", icon = "fa-rocket", tooltip = "장외 거래에서 선물이 강하게 상승하고 있습니다."; }
+			else if (avgChange > 0.05) { label = "선물 상승", color = "#84cc16", icon = "fa-arrow-up", tooltip = "지수 선물이 전반적으로 긍정적인 흐름입니다."; }
+			else if (avgChange <= -0.5) { label = "선물 급락", color = "#ef4444", icon = "fa-triangle-exclamation", tooltip = "장외 거래에서 선물이 급격히 하락 중입니다."; }
+			else if (avgChange < -0.05) { label = "선물 하락", color = "#f97316", icon = "fa-arrow-down", tooltip = "지수 선물이 전반적으로 약세를 보입니다."; }
+			return `<div class="tooltip-wrapper right-aligned" onclick="toggleTooltip(event, this)"><span class="change-badge" style="background:${color}20; color:${color}; border:1px solid ${color}40; font-weight:700; cursor:pointer; font-size:0.75rem;"><i class="fa-solid ${icon}"></i> ${label}</span><div class="custom-tooltip">${tooltip}</div></div>`;
+		}
+
+		function getForexStatusBadgeHtml(usdkrw) {
+			if (usdkrw?.error) return "";
+			const rate = usdkrw?.price || 0;
+			let label = "환율 안정", color = "#10b981", icon = "fa-check", tooltip = "원/달러 환율이 적정 수준 범위에 있습니다.";
+			if (rate >= 1400) { label = "고환율 경보", color = "#ef4444", icon = "fa-triangle-exclamation", tooltip = "환율이 1,400원 이상으로 수입 물가 및 외국인 수급 리스크가 높습니다."; }
+			else if (rate >= 1350) { label = "환율 주의", color = "#f59e0b", icon = "fa-circle-exclamation", tooltip = "환율 부담이 지속되는 구간입니다."; }
+			else if (rate <= 1250) { label = "저환율 구간", color = "#3b82f6", icon = "fa-arrow-down", tooltip = "달러 가치가 약세를 보이고 있습니다."; }
+			return `<div class="tooltip-wrapper right-aligned" onclick="toggleTooltip(event, this)"><span class="change-badge" style="background:${color}20; color:${color}; border:1px solid ${color}40; font-weight:700; cursor:pointer; font-size:0.75rem;"><i class="fa-solid ${icon}"></i> ${label}</span><div class="custom-tooltip">${tooltip}</div></div>`;
+		}
+
+		function getCommoditiesStatusBadgeHtml(oil, btc) {
+			if (oil?.error || btc?.error) return "";
+			const oilPrice = oil?.price || 0, btcChange = btc?.change || 0;
+			let label = "중립", color = "#38bdf8", icon = "fa-cubes", tooltip = "원자재 및 코인 시장이 평이한 수준입니다.";
+			if (oilPrice >= 85) { label = "유가 인플레 경고", color = "#ef4444", icon = "fa-gas-pump", tooltip = "원유 가격 고공행진으로 인플레이션 우려가 가중될 수 있습니다."; }
+			else if (btcChange >= 3.0) { label = "비트코인 강세", color = "#f59e0b", icon = "fa-bolt", tooltip = "암호화폐 시장에 강한 매수세가 유입되고 있습니다."; }
+			else if (btcChange <= -3.0) { label = "코인 시장 약세", color = "#f97316", icon = "fa-arrow-down", tooltip = "암호화폐 시장 변동성이 확대되며 약세를 보입니다."; }
+			return `<div class="tooltip-wrapper right-aligned" onclick="toggleTooltip(event, this)"><span class="change-badge" style="background:${color}20; color:${color}; border:1px solid ${color}40; font-weight:700; cursor:pointer; font-size:0.75rem;"><i class="fa-solid ${icon}"></i> ${label}</span><div class="custom-tooltip">${tooltip}</div></div>`;
+		}
+
 		function renderDashboard(data) {
 			let fngText = "Neutral", fngIcon = "fa-face-meh", fngColor = "#eab308";
 			if (data.fng.price <= 24) { fngIcon = "fa-face-flushed"; fngText = "Extreme Fear"; fngColor = "#ef4444"; }
@@ -206,6 +254,11 @@
 
 			const overallStatusBadge = getMarketStatusBadgeHtml(data.fng, data.vix, data.skew);
 			const bondStatusBadge = getBondStatusBadgeHtml(data.us02yt, data.tnx);
+			/* ★ [추가] 각 섹터별 요약 바 연동 */
+			const indicesStatusBadge = getIndicesStatusBadgeHtml(data.spx, data.ixic, data.sox);
+			const futuresStatusBadge = getFuturesStatusBadgeHtml(data.es_f, data.nq_f, data.ym_f);
+			const forexStatusBadge = getForexStatusBadgeHtml(data.usdkrw);
+			const commoditiesStatusBadge = getCommoditiesStatusBadgeHtml(data.oil, data.btc);
 
 			const sections = [
 				{
@@ -217,7 +270,7 @@
 					]
 				},
 				{
-					title: "미국 대표 지수", icon: "fa-chart-column", headerExtra: "",
+					title: "미국 대표 지수", icon: "fa-chart-column", headerExtra: indicesStatusBadge,
 					items: [
 						{ name: "S&P 500", sub: "^GSPC", price: data.spx.error ? "-" : formatNumber(data.spx.price), changeHtml: getChangeBadgeHtml(data.spx.change, data.spx.error), icon: "fa-solid fa-globe", url: data.spx.url },
 						{ name: "NASDAQ", sub: "^IXIC", price: data.ixic.error ? "-" : formatNumber(data.ixic.price), changeHtml: getChangeBadgeHtml(data.ixic.change, data.ixic.error), icon: "fa-solid fa-laptop-code", url: data.ixic.url },
@@ -225,7 +278,7 @@
 					]
 				},
 				{
-					title: "미국 3대 지수 선물", icon: "fa-clock-rotate-left", headerExtra: "",
+					title: "미국 3대 지수 선물", icon: "fa-clock-rotate-left", headerExtra: futuresStatusBadge,
 					items: [
 						{ name: "S&P 500 선물", sub: "ES=F", price: data.es_f.error ? "-" : formatNumber(data.es_f.price), changeHtml: getChangeBadgeHtml(data.es_f.change, data.es_f.error), icon: "fa-solid fa-chart-line", url: data.es_f.url },
 						{ name: "나스닥 100 선물", sub: "NQ=F", price: data.nq_f.error ? "-" : formatNumber(data.nq_f.price), changeHtml: getChangeBadgeHtml(data.nq_f.change, data.nq_f.error), icon: "fa-solid fa-terminal", url: data.nq_f.url },
@@ -233,7 +286,7 @@
 					]
 				},
 				{
-					title: "주요 글로벌 환율", icon: "fa-coins", headerExtra: "",
+					title: "주요 글로벌 환율", icon: "fa-coins", headerExtra: forexStatusBadge,
 					items: [
 						{ name: "달러 / 원", sub: "USD/KRW", price: data.usdkrw.error ? "-" : `${formatNumber(data.usdkrw.price)} 원`, changeHtml: getChangeBadgeHtml(data.usdkrw.change, data.usdkrw.error), icon: "fa-solid fa-dollar-sign", url: data.usdkrw.url },
 						{ name: "엔 / 원", sub: "JPY/KRW (100엔)", price: data.jpykrw.error ? "-" : `${formatNumber(data.jpykrw.price)} 원`, changeHtml: getChangeBadgeHtml(data.jpykrw.change, data.jpykrw.error), icon: "fa-solid fa-yen-sign", url: data.jpykrw.url },
@@ -241,7 +294,7 @@
 					]
 				},
 				{
-					title: "원자재 & 암호화폐", icon: "fa-cubes", headerExtra: "",
+					title: "원자재 & 암호화폐", icon: "fa-cubes", headerExtra: commoditiesStatusBadge,
 					items: [
 						{ name: "WTI 원유 선물", sub: "CL=F", price: data.oil.error ? "-" : `$${formatNumber(data.oil.price)}`, changeHtml: getChangeBadgeHtml(data.oil.change, data.oil.error), icon: "fa-solid fa-oil-well", url: data.oil.url },
 						{ name: "비트코인", sub: "BTC/USD", price: data.btc.error ? "-" : `$${formatNumber(data.btc.price, 0)}`, changeHtml: getChangeBadgeHtml(data.btc.change, data.btc.error), icon: "fa-brands fa-bitcoin", url: data.btc.url },
