@@ -15,11 +15,19 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Global Market Monitor</title>
 
-	<!-- ★ PWA 웹앱 및 파비콘 연동 -->
+	<!-- PWA 웹앱 및 파비콘 연동 -->
 	<link rel="manifest" href="manifest.json">
-	<link rel="icon" href="./images/icon-180.png" type="image/png">
-	<link rel="apple-touch-icon" href="./images/icon-512.png">
-	<meta name="theme-color" content="#1e293b">
+
+	<!-- SVG 파비콘 (모던 브라우저에서 무한 해상도 벡터로 선명하게 표시) -->
+	<link rel="icon" href="./images/icon.svg" type="image/svg+xml">
+	<!-- 구형 브라우저 및 호환용 180 PNG -->
+	<link rel="icon" href="./images/icon-180.png" type="image/png" sizes="180x180">
+
+	<!-- iOS 홈 화면 추가용 (180x180 권장) -->
+	<link rel="apple-touch-icon" href="./images/icon-180.png" sizes="180x180">
+
+	<!-- 상단바 테마 색상 (아이콘 배경 톤에 맞춤) -->
+	<meta name="theme-color" content="#080c16">
 
 	<!-- 스타일 시트 & 폰트 -->
 	<link rel="stylesheet" href="./style.css">

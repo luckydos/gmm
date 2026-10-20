@@ -3,18 +3,24 @@
 	"short_name": "마켓모니터",
 	"start_url": "./index.html",
 	"display": "standalone",
-	"background_color": "#1e293b",
-	"theme_color": "#1e293b",
+	"background_color": "#080c16",
+	"theme_color": "#080c16",
 	"icons": [
+		{
+			"src": "./images/icon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml"
+		},
 		{
 			"src": "./images/icon-180.png",
 			"sizes": "180x180",
 			"type": "image/png"
 		},
 		{
-			"src": "./images/icon-180.png",
+			"src": "./images/icon-512.png",
 			"sizes": "512x512",
-			"type": "image/png"
+			"type": "image/png",
+			"purpose": "any maskable"
 		}
 	]
 }
